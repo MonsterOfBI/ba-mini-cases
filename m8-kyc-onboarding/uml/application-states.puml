@@ -1,0 +1,23 @@
+@startuml
+title Состояния заявки ИП на открытие счёта (TO-BE)
+[*] --> draft : клиент ввёл ИНН, анкета заполнена из ЕГРИП
+draft --> documents : клиент подтвердил данные
+draft --> abandoned : 14 дней без действий
+documents --> checking : паспорт загружен
+documents --> abandoned : 14 дней без действий
+checking --> refused : стоп-фактор (KYC-01…04)
+checking --> manual_review : KYC-05, 07, 08, 10
+checking --> awaiting_identification : KYC-06, 09
+manual_review --> info_requested : нужны пояснения
+info_requested --> manual_review : клиент ответил
+info_requested --> abandoned : 14 дней без ответа
+manual_review --> refused : риск подтвердился
+manual_review --> awaiting_identification : одобрено
+awaiting_identification --> opened : ЕБС или встреча, счёт открыт
+awaiting_identification --> abandoned : не пришёл на встречу, 14 дней
+opened --> [*]
+refused --> [*]
+abandoned --> [*]
+note right of refused : причина клиенту,\nсообщение в Росфинмониторинг
+note right of opened : сообщение в ФНС;\nKYC-09 — постконтроль 30 дней
+@enduml

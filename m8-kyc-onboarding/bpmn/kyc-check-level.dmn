@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Уровень проверки заявки ИП на открытие счёта (TO-BE), банк «Пример». Открывается в Camunda Modeler или на demo.bpmn.io/dmn.
+     Hit policy FIRST: правила перекрываются, порядок важен — сначала то, что требует отказа по закону, потом ручная, потом авто.
+     Проверка: python tests/test_dmn.py · сравнение с AS-IS на данных: python tools/route_compare.py -->
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" id="KycRouting" name="Уровень проверки KYC" namespace="http://camunda.org/schema/1.0/dmn">
+  <decision id="checkLevel" name="Уровень проверки заявки">
+    <decisionTable id="t_checkLevel" hitPolicy="FIRST">
+      <input id="in0" label="В перечне Росфинмониторинга / решении МВК"><inputExpression id="ie0" typeRef="boolean"><text>inLists</text></inputExpression></input>
+      <input id="in1" label="Паспорт действителен"><inputExpression id="ie1" typeRef="boolean"><text>passportValid</text></inputExpression></input>
+      <input id="in2" label="Статус ИП в ЕГРИП"><inputExpression id="ie2" typeRef="string"><text>egripStatus</text></inputExpression></input>
+      <input id="in3" label="Группа риска ЗСК (ЦБ)"><inputExpression id="ie3" typeRef="string"><text>zskGroup</text></inputExpression></input>
+      <input id="in4" label="Расхождение ЕГРИП и паспорта"><inputExpression id="ie4" typeRef="boolean"><text>dataMismatch</text></inputExpression></input>
+      <input id="in5" label="ОКВЭД из списка внимания"><inputExpression id="ie5" typeRef="boolean"><text>okvedWatch</text></inputExpression></input>
+      <output id="out0" label="Уровень" name="level" typeRef="string" />
+      <output id="out1" label="Правило" name="rule" typeRef="string" />
+      <output id="out2" label="Постконтроль 30 дней" name="postControl" typeRef="boolean" />
+      <rule id="KYC01">
+        <description>KYC-01: Есть в перечне Росфинмониторинга или решении МВК о заморозке — отказ</description>
+        <inputEntry id="KYC01i0"><text>true</text></inputEntry>
+        <inputEntry id="KYC01i1"><text>-</text></inputEntry>
+        <inputEntry id="KYC01i2"><text>-</text></inputEntry>
+        <inputEntry id="KYC01i3"><text>-</text></inputEntry>
+        <inputEntry id="KYC01i4"><text>-</text></inputEntry>
+        <inputEntry id="KYC01i5"><text>-</text></inputEntry>
+        <outputEntry id="KYC01o0"><text>"REFUSE"</text></outputEntry>
+        <outputEntry id="KYC01o1"><text>"KYC-01"</text></outputEntry>
+        <outputEntry id="KYC01o2"><text>false</text></outputEntry>
+      </rule>
+      <rule id="KYC02">
+        <description>KYC-02: Паспорт недействителен — отказ (нельзя идентифицировать)</description>
+        <inputEntry id="KYC02i0"><text>-</text></inputEntry>
+        <inputEntry id="KYC02i1"><text>false</text></inputEntry>
+        <inputEntry id="KYC02i2"><text>-</text></inputEntry>
+        <inputEntry id="KYC02i3"><text>-</text></inputEntry>
+        <inputEntry id="KYC02i4"><text>-</text></inputEntry>
+        <inputEntry id="KYC02i5"><text>-</text></inputEntry>
+        <outputEntry id="KYC02o0"><text>"REFUSE"</text></outputEntry>
+        <outputEntry id="KYC02o1"><text>"KYC-02"</text></outputEntry>
+        <outputEntry id="KYC02o2"><text>false</text></outputEntry>
+      </rule>
+      <rule id="KYC03">
+        <description>KYC-03: ИП прекратил деятельность по ЕГРИП — отказ</description>
+        <inputEntry id="KYC03i0"><text>-</text></inputEntry>
+        <inputEntry id="KYC03i1"><text>-</text></inputEntry>
+        <inputEntry id="KYC03i2"><text>"ceased"</text></inputEntry>
+        <inputEntry id="KYC03i3"><text>-</text></inputEntry>
+        <inputEntry id="KYC03i4"><text>-</text></inputEntry>
+        <inputEntry id="KYC03i5"><text>-</text></inputEntry>
+        <outputEntry id="KYC03o0"><text>"REFUSE"</text></outputEntry>
+        <outputEntry id="KYC03o1"><text>"KYC-03"</text></outputEntry>
+        <outputEntry id="KYC03o2"><text>false</text></outputEntry>
+      </rule>
+      <rule id="KYC04">
+        <description>KYC-04: ЗСК: красная группа (высокий риск) — отказ, клиенту сообщаем о праве обратиться в МВК при Банке России</description>
+        <inputEntry id="KYC04i0"><text>-</text></inputEntry>
+        <inputEntry id="KYC04i1"><text>-</text></inputEntry>
+        <inputEntry id="KYC04i2"><text>-</text></inputEntry>
+        <inputEntry id="KYC04i3"><text>"high"</text></inputEntry>
+        <inputEntry id="KYC04i4"><text>-</text></inputEntry>
+        <inputEntry id="KYC04i5"><text>-</text></inputEntry>
+        <outputEntry id="KYC04o0"><text>"REFUSE"</text></outputEntry>
+        <outputEntry id="KYC04o1"><text>"KYC-04"</text></outputEntry>
+        <outputEntry id="KYC04o2"><text>false</text></outputEntry>
+      </rule>
+      <rule id="KYC05">
+        <description>KYC-05: Данные из ЕГРИП не совпали с паспортом — ручная проверка с запросом пояснений</description>
+        <inputEntry id="KYC05i0"><text>-</text></inputEntry>
+        <inputEntry id="KYC05i1"><text>-</text></inputEntry>
+        <inputEntry id="KYC05i2"><text>-</text></inputEntry>
+        <inputEntry id="KYC05i3"><text>-</text></inputEntry>
+        <inputEntry id="KYC05i4"><text>true</text></inputEntry>
+        <inputEntry id="KYC05i5"><text>-</text></inputEntry>
+        <outputEntry id="KYC05o0"><text>"MANUAL"</text></outputEntry>
+        <outputEntry id="KYC05o1"><text>"KYC-05"</text></outputEntry>
+        <outputEntry id="KYC05o2"><text>false</text></outputEntry>
+      </rule>
+      <rule id="KYC06">
+        <description>KYC-06: ЗСК: зелёная группа — авто: отказать по 115-ФЗ нельзя, ручная проверка ничего не меняет</description>
+        <inputEntry id="KYC06i0"><text>-</text></inputEntry>
+        <inputEntry id="KYC06i1"><text>-</text></inputEntry>
+        <inputEntry id="KYC06i2"><text>-</text></inputEntry>
+        <inputEntry id="KYC06i3"><text>"low"</text></inputEntry>
+        <inputEntry id="KYC06i4"><text>-</text></inputEntry>
+        <inputEntry id="KYC06i5"><text>-</text></inputEntry>
+        <outputEntry id="KYC06o0"><text>"AUTO"</text></outputEntry>
+        <outputEntry id="KYC06o1"><text>"KYC-06"</text></outputEntry>
+        <outputEntry id="KYC06o2"><text>false</text></outputEntry>
+      </rule>
+      <rule id="KYC07">
+        <description>KYC-07: ЗСК: жёлтая группа (средний риск) — ручная проверка</description>
+        <inputEntry id="KYC07i0"><text>-</text></inputEntry>
+        <inputEntry id="KYC07i1"><text>-</text></inputEntry>
+        <inputEntry id="KYC07i2"><text>-</text></inputEntry>
+        <inputEntry id="KYC07i3"><text>"medium"</text></inputEntry>
+        <inputEntry id="KYC07i4"><text>-</text></inputEntry>
+        <inputEntry id="KYC07i5"><text>-</text></inputEntry>
+        <outputEntry id="KYC07o0"><text>"MANUAL"</text></outputEntry>
+        <outputEntry id="KYC07o1"><text>"KYC-07"</text></outputEntry>
+        <outputEntry id="KYC07o2"><text>false</text></outputEntry>
+      </rule>
+      <rule id="KYC08">
+        <description>KYC-08: Группы ЗСК ещё нет и ОКВЭД из списка внимания — ручная проверка</description>
+        <inputEntry id="KYC08i0"><text>-</text></inputEntry>
+        <inputEntry id="KYC08i1"><text>-</text></inputEntry>
+        <inputEntry id="KYC08i2"><text>-</text></inputEntry>
+        <inputEntry id="KYC08i3"><text>"none"</text></inputEntry>
+        <inputEntry id="KYC08i4"><text>-</text></inputEntry>
+        <inputEntry id="KYC08i5"><text>true</text></inputEntry>
+        <outputEntry id="KYC08o0"><text>"MANUAL"</text></outputEntry>
+        <outputEntry id="KYC08o1"><text>"KYC-08"</text></outputEntry>
+        <outputEntry id="KYC08o2"><text>false</text></outputEntry>
+      </rule>
+      <rule id="KYC09">
+        <description>KYC-09: Группы ЗСК ещё нет, ОКВЭД обычный — авто с постконтролем: лимиты и усиленный мониторинг 30 дней</description>
+        <inputEntry id="KYC09i0"><text>-</text></inputEntry>
+        <inputEntry id="KYC09i1"><text>-</text></inputEntry>
+        <inputEntry id="KYC09i2"><text>-</text></inputEntry>
+        <inputEntry id="KYC09i3"><text>"none"</text></inputEntry>
+        <inputEntry id="KYC09i4"><text>-</text></inputEntry>
+        <inputEntry id="KYC09i5"><text>false</text></inputEntry>
+        <outputEntry id="KYC09o0"><text>"AUTO"</text></outputEntry>
+        <outputEntry id="KYC09o1"><text>"KYC-09"</text></outputEntry>
+        <outputEntry id="KYC09o2"><text>true</text></outputEntry>
+      </rule>
+      <rule id="KYC10">
+        <description>KYC-10: Всё, что не подошло выше (новое значение в справочнике) — ручная проверка, безопасный вариант</description>
+        <inputEntry id="KYC10i0"><text>-</text></inputEntry>
+        <inputEntry id="KYC10i1"><text>-</text></inputEntry>
+        <inputEntry id="KYC10i2"><text>-</text></inputEntry>
+        <inputEntry id="KYC10i3"><text>-</text></inputEntry>
+        <inputEntry id="KYC10i4"><text>-</text></inputEntry>
+        <inputEntry id="KYC10i5"><text>-</text></inputEntry>
+        <outputEntry id="KYC10o0"><text>"MANUAL"</text></outputEntry>
+        <outputEntry id="KYC10o1"><text>"KYC-10"</text></outputEntry>
+        <outputEntry id="KYC10o2"><text>false</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>
