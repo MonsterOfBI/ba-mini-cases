@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Политика командировочных расходов (учебная). Открывается в Camunda Modeler. Hit policy FIRST. -->
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" id="ExpensePolicy" name="Политика расходов" namespace="http://camunda.org/schema/1.0/dmn">
+  <decision id="checkExpense" name="Проверка расхода по политике">
+    <decisionTable id="t" hitPolicy="FIRST">
+      <input id="i1" label="Категория"><inputExpression id="ie1" typeRef="string"><text>category</text></inputExpression></input>
+      <input id="i2" label="Город"><inputExpression id="ie2" typeRef="string"><text>city</text></inputExpression></input>
+      <input id="i3" label="Сумма за единицу (сутки, поездку), ₽"><inputExpression id="ie3" typeRef="number"><text>amountPerUnit</text></inputExpression></input>
+      <input id="i4" label="Время поездки (час)"><inputExpression id="ie4" typeRef="number"><text>hour</text></inputExpression></input>
+      <output id="o1" label="Результат" name="result" typeRef="string" />
+      <output id="o2" label="Пояснение" name="note" typeRef="string" />
+      <rule id="r1"><description>Алкоголь не возмещается</description>
+        <inputEntry id="r1a"><text>"alcohol"</text></inputEntry><inputEntry id="r1b"><text>-</text></inputEntry><inputEntry id="r1c"><text>-</text></inputEntry><inputEntry id="r1d"><text>-</text></inputEntry>
+        <outputEntry id="r1o"><text>"forbidden"</text></outputEntry><outputEntry id="r1n"><text>"Не возмещается по политике"</text></outputEntry></rule>
+      <rule id="r2"><description>Гостиница в Москве и Санкт-Петербурге</description>
+        <inputEntry id="r2a"><text>"hotel"</text></inputEntry><inputEntry id="r2b"><text>"Москва","Санкт-Петербург"</text></inputEntry><inputEntry id="r2c"><text>&lt;= 7000</text></inputEntry><inputEntry id="r2d"><text>-</text></inputEntry>
+        <outputEntry id="r2o"><text>"ok"</text></outputEntry><outputEntry id="r2n"><text>"В лимите 7000 ₽/сутки"</text></outputEntry></rule>
+      <rule id="r3"><description>Гостиница в других городах</description>
+        <inputEntry id="r3a"><text>"hotel"</text></inputEntry><inputEntry id="r3b"><text>not("Москва","Санкт-Петербург")</text></inputEntry><inputEntry id="r3c"><text>&lt;= 5000</text></inputEntry><inputEntry id="r3d"><text>-</text></inputEntry>
+        <outputEntry id="r3o"><text>"ok"</text></outputEntry><outputEntry id="r3n"><text>"В лимите 5000 ₽/сутки"</text></outputEntry></rule>
+      <rule id="r4"><description>Такси ночью — без ограничения по сумме</description>
+        <inputEntry id="r4a"><text>"taxi"</text></inputEntry><inputEntry id="r4b"><text>-</text></inputEntry><inputEntry id="r4c"><text>-</text></inputEntry><inputEntry id="r4d"><text>&gt;= 22, &lt; 7</text></inputEntry>
+        <outputEntry id="r4o"><text>"ok"</text></outputEntry><outputEntry id="r4n"><text>"Ночное такси разрешено"</text></outputEntry></rule>
+      <rule id="r5"><description>Такси днём — до 1500 ₽</description>
+        <inputEntry id="r5a"><text>"taxi"</text></inputEntry><inputEntry id="r5b"><text>-</text></inputEntry><inputEntry id="r5c"><text>&lt;= 1500</text></inputEntry><inputEntry id="r5d"><text>-</text></inputEntry>
+        <outputEntry id="r5o"><text>"ok"</text></outputEntry><outputEntry id="r5n"><text>"В лимите 1500 ₽"</text></outputEntry></rule>
+      <rule id="r6"><description>Билеты — по факту</description>
+        <inputEntry id="r6a"><text>"ticket"</text></inputEntry><inputEntry id="r6b"><text>-</text></inputEntry><inputEntry id="r6c"><text>-</text></inputEntry><inputEntry id="r6d"><text>-</text></inputEntry>
+        <outputEntry id="r6o"><text>"ok"</text></outputEntry><outputEntry id="r6n"><text>"Эконом-класс по факту"</text></outputEntry></rule>
+      <rule id="r7"><description>Остальное — превышение, нужно объяснение и решение руководителя</description>
+        <inputEntry id="r7a"><text>-</text></inputEntry><inputEntry id="r7b"><text>-</text></inputEntry><inputEntry id="r7c"><text>-</text></inputEntry><inputEntry id="r7d"><text>-</text></inputEntry>
+        <outputEntry id="r7o"><text>"over_limit"</text></outputEntry><outputEntry id="r7n"><text>"Сверх политики — нужно объяснение"</text></outputEntry></rule>
+    </decisionTable>
+  </decision>
+</definitions>
