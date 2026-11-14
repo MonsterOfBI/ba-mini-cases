@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Схема ответа XML_daily.asp, составлена по образцу ответа ЦБ для учебного проекта.
+     Официальные XSD публикует ЦБ на странице https://www.cbr.ru/development/sxml/ — сверить перед использованием. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <!-- Десятичное число с запятой, как отдаёт ЦБ: 84,4283 -->
+  <xs:simpleType name="RuDecimal">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="\d+(,\d+)?"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:element name="ValCurs">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Valute" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="NumCode"><xs:simpleType><xs:restriction base="xs:string"><xs:pattern value="\d{3}"/></xs:restriction></xs:simpleType></xs:element>
+              <xs:element name="CharCode"><xs:simpleType><xs:restriction base="xs:string"><xs:pattern value="[A-Z]{3}"/></xs:restriction></xs:simpleType></xs:element>
+              <xs:element name="Nominal" type="xs:positiveInteger"/>
+              <xs:element name="Name" type="xs:string"/>
+              <xs:element name="Value" type="RuDecimal"/>
+              <xs:element name="VunitRate" type="RuDecimal" minOccurs="0"/>
+            </xs:sequence>
+            <xs:attribute name="ID" type="xs:string" use="required"/>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <!-- Дата, на которую установлен курс: ДД.ММ.ГГГГ -->
+      <xs:attribute name="Date" use="required">
+        <xs:simpleType><xs:restriction base="xs:string"><xs:pattern value="\d{2}\.\d{2}\.\d{4}"/></xs:restriction></xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="name" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
