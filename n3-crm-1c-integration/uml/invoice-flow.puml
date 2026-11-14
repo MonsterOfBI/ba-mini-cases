@@ -1,0 +1,24 @@
+@startuml
+title Сделка CRM → счёт в 1С через очередь
+actor "Менеджер" as M
+participant CRM
+queue "Очередь" as Q
+participant "Адаптер" as I
+participant "1С:УТ" as ERP
+M -> CRM : стадия «Выставить счёт»
+CRM -> Q : deal.invoice_requested {deal_id}
+Q -> I : доставить (at-least-once)
+I -> CRM : GET /deals/{id}
+I -> ERP : найти контрагента (ИНН+КПП)
+alt не найден
+  I -> ERP : создать контрагента
+end
+I -> ERP : создать счёт (ВнешнийИД = deal_id)
+alt ошибка
+  I -> Q : повтор с задержкой, потом dead-letter
+  I -> CRM : задача менеджеру
+else успех
+  ERP --> I : номер, PDF
+  I -> CRM : PATCH /deals/{id}
+end
+@enduml

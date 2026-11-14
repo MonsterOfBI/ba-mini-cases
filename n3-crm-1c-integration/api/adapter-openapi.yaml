@@ -1,0 +1,38 @@
+openapi: 3.0.3
+info:
+  title: CRM ↔ 1С adapter callbacks (учебный)
+  version: 1.0.0
+  description: Мини-контракт обратной связи из 1С в CRM. Учебный проект, сервиса нет.
+servers:
+  - url: https://crm.example.local/api/v1
+paths:
+  /deals/{deal_id}:
+    patch:
+      summary: Записать в сделку номер счёта или статус оплаты из 1С
+      parameters:
+        - name: deal_id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: ID события в 1С
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                invoice_no: { type: string, example: "УТ-000512" }
+                invoice_pdf_url: { type: string, format: uri }
+                invoice_amount: { type: number, format: decimal }
+                payment_status: { type: string, enum: [unpaid, partially_paid, paid] }
+                paid_at: { type: string, format: date }
+      responses:
+        '200': { description: Обновлено (или повтор с тем же ключом) }
+        '404': { description: Сделка не найдена }
+        '409': { description: "Сделка в статусе lost: обновление отклонено, нужна ручная проверка" }
+        '422': { description: "Неверные данные (например, сумма отрицательная)" }
