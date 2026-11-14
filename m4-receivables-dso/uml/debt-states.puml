@@ -1,0 +1,22 @@
+@startuml
+title Жизненный цикл долга по реализации (УПД)
+[*] --> not_due : отгрузка, долг создан
+not_due --> paid : оплачен в срок
+not_due --> overdue : срок оплаты прошёл
+overdue --> partially_paid : пришла часть суммы
+partially_paid --> overdue : остаток всё ещё просрочен
+overdue --> promised : клиент назвал дату оплаты
+promised --> overdue : обещание нарушено
+promised --> paid : оплачен
+overdue --> claim : 31+ день, претензия
+partially_paid --> claim : 31+ день по остатку
+claim --> paid : оплачен после претензии
+claim --> lawsuit : 30 дней без ответа
+claim --> written_off : сумма < порога, иск дороже долга
+lawsuit --> paid : взыскан
+lawsuit --> written_off : взыскать нельзя
+overdue --> paid : оплачен
+partially_paid --> paid : доплачен остаток
+paid --> [*]
+written_off --> [*]
+@enduml
