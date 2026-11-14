@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Правила кэшбэка «Пример Кэшбэк». Открывается в Camunda Modeler (вкладка DMN) или на demo.bpmn.io/dmn.
+     Лимит 3 000 ₽ в месяц и округление сюда не входят: им нужна сумма за месяц, это шаг расчёта, а не таблица решений.
+     Проверка: python tests/test_rules.py -->
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" id="CashbackRules" name="Правила кэшбэка" namespace="http://camunda.org/schema/1.0/dmn">
+  <decision id="mccGroup" name="Группа MCC">
+    <decisionTable id="t_mccGroup" hitPolicy="UNIQUE">
+      <input id="mccGroup_in0" label="MCC операции"><inputExpression id="mccGroup_ie0" typeRef="number"><text>mcc</text></inputExpression></input>
+      <output id="mccGroup_out0" label="Группа кэшбэка" name="group" typeRef="string" />
+      <rule id="mccGroup_r1">
+        <description>Супермаркеты и продукты</description>
+        <inputEntry id="mccGroup_r1i0"><text>5411, 5499</text></inputEntry>
+        <outputEntry id="mccGroup_r1o0"><text>"supermarkets"</text></outputEntry>
+      </rule>
+      <rule id="mccGroup_r2">
+        <description>Кафе, бары, фастфуд</description>
+        <inputEntry id="mccGroup_r2i0"><text>5812, 5813, 5814</text></inputEntry>
+        <outputEntry id="mccGroup_r2o0"><text>"restaurants"</text></outputEntry>
+      </rule>
+      <rule id="mccGroup_r3">
+        <description>АЗС</description>
+        <inputEntry id="mccGroup_r3i0"><text>5541, 5542</text></inputEntry>
+        <outputEntry id="mccGroup_r3o0"><text>"fuel"</text></outputEntry>
+      </rule>
+      <rule id="mccGroup_r4">
+        <description>Такси и каршеринг</description>
+        <inputEntry id="mccGroup_r4i0"><text>4121, 7512</text></inputEntry>
+        <outputEntry id="mccGroup_r4o0"><text>"taxi"</text></outputEntry>
+      </rule>
+      <rule id="mccGroup_r5">
+        <description>Аптеки</description>
+        <inputEntry id="mccGroup_r5i0"><text>5912</text></inputEntry>
+        <outputEntry id="mccGroup_r5o0"><text>"pharmacy"</text></outputEntry>
+      </rule>
+      <rule id="mccGroup_r6">
+        <description>Одежда и обувь</description>
+        <inputEntry id="mccGroup_r6i0"><text>5651, 5661, 5691</text></inputEntry>
+        <outputEntry id="mccGroup_r6o0"><text>"clothing"</text></outputEntry>
+      </rule>
+      <rule id="mccGroup_r7">
+        <description>Электроника</description>
+        <inputEntry id="mccGroup_r7i0"><text>5732</text></inputEntry>
+        <outputEntry id="mccGroup_r7o0"><text>"electronics"</text></outputEntry>
+      </rule>
+      <rule id="mccGroup_r8">
+        <description>Маркетплейсы и универмаги</description>
+        <inputEntry id="mccGroup_r8i0"><text>5311, 5399</text></inputEntry>
+        <outputEntry id="mccGroup_r8o0"><text>"marketplace"</text></outputEntry>
+      </rule>
+      <rule id="mccGroup_r9">
+        <description>Авиабилеты и отели</description>
+        <inputEntry id="mccGroup_r9i0"><text>4511, 7011</text></inputEntry>
+        <outputEntry id="mccGroup_r9o0"><text>"travel"</text></outputEntry>
+      </rule>
+      <rule id="mccGroup_r10">
+        <description>ЖКУ</description>
+        <inputEntry id="mccGroup_r10i0"><text>4900</text></inputEntry>
+        <outputEntry id="mccGroup_r10o0"><text>"utilities"</text></outputEntry>
+      </rule>
+      <rule id="mccGroup_r11">
+        <description>Наличные, переводы, квази-кэш, пополнения, азартные игры, госплатежи</description>
+        <inputEntry id="mccGroup_r11i0"><text>6010, 6011, 6012, 6051, 4829, 6540, 7995, 9311, 9222, 9399</text></inputEntry>
+        <outputEntry id="mccGroup_r11o0"><text>"excluded"</text></outputEntry>
+      </rule>
+      <rule id="mccGroup_r12">
+        <description>Любой другой MCC: базовый кэшбэк</description>
+        <inputEntry id="mccGroup_r12i0"><text>not(5411, 5499, 5812, 5813, 5814, 5541, 5542, 4121, 7512, 5912, 5651, 5661, 5691, 5732, 5311, 5399, 4511, 7011, 4900, 6010, 6011, 6012, 6051, 4829, 6540, 7995, 9311, 9222, 9399)</text></inputEntry>
+        <outputEntry id="mccGroup_r12o0"><text>"other"</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+  <decision id="cashbackRate" name="Ставка кэшбэка">
+    <informationRequirement id="ir_cashbackRate"><requiredDecision href="#mccGroup" /></informationRequirement>
+    <decisionTable id="t_cashbackRate" hitPolicy="FIRST">
+      <input id="cashbackRate_in0" label="Группа кэшбэка"><inputExpression id="cashbackRate_ie0" typeRef="string"><text>group</text></inputExpression></input>
+      <input id="cashbackRate_in1" label="Сумма покупки, ₽"><inputExpression id="cashbackRate_ie1" typeRef="number"><text>amount</text></inputExpression></input>
+      <input id="cashbackRate_in2" label="Категория выбрана клиентом на месяц"><inputExpression id="cashbackRate_ie2" typeRef="boolean"><text>isChosen</text></inputExpression></input>
+      <output id="cashbackRate_out0" label="Ставка" name="rate" typeRef="number" />
+      <output id="cashbackRate_out1" label="Правило" name="rule" typeRef="string" />
+      <rule id="cashbackRate_r1">
+        <description>CB-01: исключённые MCC — без кэшбэка</description>
+        <inputEntry id="cashbackRate_r1i0"><text>"utilities", "excluded"</text></inputEntry>
+        <inputEntry id="cashbackRate_r1i1"><text>-</text></inputEntry>
+        <inputEntry id="cashbackRate_r1i2"><text>-</text></inputEntry>
+        <outputEntry id="cashbackRate_r1o0"><text>0</text></outputEntry>
+        <outputEntry id="cashbackRate_r1o1"><text>"CB-01"</text></outputEntry>
+      </rule>
+      <rule id="cashbackRate_r2">
+        <description>CB-02: покупки меньше 100 ₽ — без кэшбэка</description>
+        <inputEntry id="cashbackRate_r2i0"><text>-</text></inputEntry>
+        <inputEntry id="cashbackRate_r2i1"><text>&lt; 100</text></inputEntry>
+        <inputEntry id="cashbackRate_r2i2"><text>-</text></inputEntry>
+        <outputEntry id="cashbackRate_r2o0"><text>0</text></outputEntry>
+        <outputEntry id="cashbackRate_r2o1"><text>"CB-02"</text></outputEntry>
+      </rule>
+      <rule id="cashbackRate_r3">
+        <description>CB-03: выбранная категория «Супермаркеты» — 3 %</description>
+        <inputEntry id="cashbackRate_r3i0"><text>"supermarkets"</text></inputEntry>
+        <inputEntry id="cashbackRate_r3i1"><text>-</text></inputEntry>
+        <inputEntry id="cashbackRate_r3i2"><text>true</text></inputEntry>
+        <outputEntry id="cashbackRate_r3o0"><text>0.03</text></outputEntry>
+        <outputEntry id="cashbackRate_r3o1"><text>"CB-03"</text></outputEntry>
+      </rule>
+      <rule id="cashbackRate_r4">
+        <description>CB-03: выбранная повышенная категория — 5 %</description>
+        <inputEntry id="cashbackRate_r4i0"><text>"restaurants", "fuel", "taxi", "pharmacy", "clothing"</text></inputEntry>
+        <inputEntry id="cashbackRate_r4i1"><text>-</text></inputEntry>
+        <inputEntry id="cashbackRate_r4i2"><text>true</text></inputEntry>
+        <outputEntry id="cashbackRate_r4o0"><text>0.05</text></outputEntry>
+        <outputEntry id="cashbackRate_r4o1"><text>"CB-03"</text></outputEntry>
+      </rule>
+      <rule id="cashbackRate_r5">
+        <description>CB-04: всё остальное — базовый 1 %</description>
+        <inputEntry id="cashbackRate_r5i0"><text>-</text></inputEntry>
+        <inputEntry id="cashbackRate_r5i1"><text>-</text></inputEntry>
+        <inputEntry id="cashbackRate_r5i2"><text>-</text></inputEntry>
+        <outputEntry id="cashbackRate_r5o0"><text>0.01</text></outputEntry>
+        <outputEntry id="cashbackRate_r5o1"><text>"CB-04"</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>
