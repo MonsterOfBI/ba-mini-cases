@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SOAP 1.1-запрос к веб-сервису ЦБ DailyInfo, метод KeyRateXML: ключевая ставка за период.
+     POST https://www.cbr.ru/DailyInfoWebServ/DailyInfo.asmx
+     Content-Type: text/xml; charset=utf-8
+     SOAPAction: "http://web.cbr.ru/KeyRateXML"
+     WSDL: https://www.cbr.ru/DailyInfoWebServ/DailyInfo.asmx?WSDL -->
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <KeyRateXML xmlns="http://web.cbr.ru/">
+      <fromDate>2024-12-01T00:00:00</fromDate>
+      <ToDate>2026-11-13T00:00:00</ToDate>
+    </KeyRateXML>
+  </soap:Body>
+</soap:Envelope>
